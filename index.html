@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Interaktif Bilangan Bulat - SD Negeri Ploso (Kota Jombang)</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Fredoka & Poppins -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Canvas Confetti CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        ploso: {
+                            50: '#F0F9FF',
+                            100: '#E0F2FE',
+                            500: '#0284C7',
+                            600: '#0369A1',
+                            700: '#075985',
+                            800: '#0C4A6E',
+                            900: '#0A3651',
+                        },
+                        amberCustom: '#F59E0B',
+                        emeraldCustom: '#10B981',
+                        roseCustom: '#F43F5E'
+                    },
+                    fontFamily: {
+                        fredoka: ['Fredoka', 'sans-serif'],
+                        sans: ['Poppins', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 50%, #bae6fd 100%);
+            min-height: 100vh;
+        }
+
+        .heading-font {
+            font-family: 'Fredoka', cursive, sans-serif;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            box-shadow: 0 20px 25px -5px rgba(2, 132, 199, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
+        }
+
+        @keyframes frogJump {
+            0% { transform: translateY(0) scale(1, 1); }
+            30% { transform: translateY(-40px) scale(0.9, 1.1); }
+            70% { transform: translateY(-40px) scale(0.9, 1.1); }
+            100% { transform: translateY(0) scale(1, 1); }
+        }
+        .animate-jump {
+            animation: frogJump 0.6s ease-in-out;
+        }
+
+        @keyframes subFloat {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-8px) rotate(1deg); }
+        }
+        .animate-sub-float {
+            animation: subFloat 3s ease-in-out infinite;
+        }
+
+        @media print {
+            body * { visibility: hidden; }
+            #printable-certificate, #printable-certificate * { visibility: visible; }
+            #printable-certificate {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+            .no-print { display: none !important; }
+        }
+
+        .active-tab {
+            background-color: #0284C7 !important;
+            color: #FFFFFF !important;
+            box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased flex flex-col justify-between min-h-screen">
+
+    <script>
+        // Web Audio API Synthesizer & Sound Effects
+        const SoundEngine = {
+            ctx: null,
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            },
+            playClick() {
+                this.init();
+                if(this.ctx.state === 'suspended') this.ctx.resume();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(450, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(150, this.ctx.currentTime + 0.08);
+                gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.08);
+            },
+            playFrogRibbit() {
+                this.init();
+                if(this.ctx.state === 'suspended') this.ctx.resume();
+                const now = this.ctx.currentTime;
+                
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.linearRampToValueAtTime(320, now + 0.08);
+                osc.frequency.linearRampToValueAtTime(180, now + 0.2);
+                
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.25);
+            },
+            playMenuJingle(slideIndex) {
+                this.init();
+                if(this.ctx.state === 'suspended') this.ctx.resume();
+                const now = this.ctx.currentTime;
+                
+                const jingles = [
+                    [523.25, 659.25, 783.99],
+                    [659.25, 783.99, 880.00],
+                    [587.33, 698.46, 880.00],
+                    [783.99, 880.00, 1046.50],
+                    [659.25, 880.00, 987.77],
+                    [523.25, 659.25, 1046.50],
+                    [698.46, 880.00, 1046.50],
+                    [783.99, 987.77, 1174.66],
+                    [523.25, 783.99, 1046.50],
+                    [659.25, 783.99, 1046.50, 1318.51],
+                    [523.25, 659.25, 783.99, 1046.50],
+                    [880.00, 987.77, 1174.66],
+                    [523.25, 659.25, 783.99]
+                ];
+
+                const notes = jingles[(slideIndex - 1) % jingles.length] || [523.25, 659.25, 783.99];
+                
+                notes.forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.09);
+                    gain.gain.setValueAtTime(0.12, now + idx * 0.09);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.09 + 0.22);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now + idx * 0.09);
+                    osc.stop(now + idx * 0.09 + 0.22);
+                });
+            },
+            playCorrect() {
+                this.init();
+                if(this.ctx.state === 'suspended') this.ctx.resume();
+                const now = this.ctx.currentTime;
+                const notes = [523.25, 659.25, 783.99, 1046.50];
+                notes.forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+                    gain.gain.setValueAtTime(0.2, now + idx * 0.08);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.08 + 0.2);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now + idx * 0.08);
+                    osc.stop(now + idx * 0.08 + 0.2);
+                });
+            },
+            playWrong() {
+                this.init();
+                if(this.ctx.state === 'suspended') this.ctx.resume();
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(280, now);
+                osc.frequency.setValueAtTime(210, now + 0.12);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.35);
+            },
+            playFanfare() {
+                this.init();
+                if(this.ctx.state === 'suspended') this.ctx.resume();
+                const now = this.ctx.currentTime;
+                const melody = [523.25, 523.25, 523.25, 659.25, 783.99, 1046.50];
+                const times = [0, 0.12, 0.24, 0.36, 0.5, 0.7];
+                melody.forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now + times[idx]);
+                    gain.gain.setValueAtTime(0.25, now + times[idx]);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + times[idx] + 0.4);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now + times[idx]);
+                    osc.stop(now + times[idx] + 0.4);
+                });
+            }
+        };
+
+        // Membaca Materi dengan Suara Wanita Merdu
+        function speakTextFemale(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'id-ID';
+                utterance.pitch = 1.25;
+                utterance.rate = 0.88;
+
+                const voices = window.speechSynthesis.getVoices();
+                const femaleVoice = voices.find(v => v.lang.includes('id') && (v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('gadis') || v.name.toLowerCase().includes('wanita') || v.name.toLowerCase().includes('google')));
+                if (femaleVoice) {
+                    utterance.voice = femaleVoice;
+                }
+
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+    </script>
+
+    <!-- ================= PAGE LOGIN AWAL ================= -->
+    <div id="login-screen" class="fixed inset-0 z-50 bg-gradient-to-br from-sky-800 via-sky-600 to-cyan-600 flex items-center justify-center p-4">
+        <div class="glass-card p-8 sm:p-10 rounded-3xl max-w-md w-full text-center space-y-6 border-2 border-white/60 shadow-2xl">
+            
+            <!-- Logo SDN Ploso di Halaman Login -->
+            <div class="w-24 h-24 mx-auto flex items-center justify-center drop-shadow-xl animate-bounce">
+                <img src="LOGO_SDN_PLOSO-removebg-preview.png" alt="Logo SDN Ploso" class="max-h-full max-w-full object-contain">
+            </div>
+
+            <div>
+                <h2 class="heading-font text-2xl sm:text-3xl font-extrabold text-slate-800">SELAMAT DATANG!</h2>
+                <p class="text-xs font-semibold text-sky-700 tracking-wide mt-1">SD NEGERI PLOSO • KOTA JOMBANG</p>
+                <p class="text-xs text-slate-500 mt-2">Masukkan Nama Lengkap dan Nomor Absen Anda sebelum memulai pembelajaran.</p>
+            </div>
+
+            <div class="space-y-4 text-left">
+                <div>
+                    <label class="text-xs font-bold text-slate-600 block mb-1">Nama Lengkap Siswa:</label>
+                    <input type="text" id="login-student-name" placeholder="Contoh: Budi Santoso" class="w-full p-3.5 border-2 border-slate-300 rounded-2xl font-bold text-slate-800 text-sm focus:border-sky-600 focus:outline-none transition">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-slate-600 block mb-1">Nomor Absen:</label>
+                    <input type="number" id="login-student-no" placeholder="Contoh: 12" class="w-full p-3.5 border-2 border-slate-300 rounded-2xl font-bold text-slate-800 text-sm focus:border-sky-600 focus:outline-none transition">
+                </div>
+            </div>
+
+            <button onclick="handleStudentLogin()" class="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white heading-font font-bold text-base rounded-2xl shadow-xl hover:scale-[1.02] transition flex items-center justify-center space-x-2">
+                <span>Masuk Ke Pembelajaran</span>
+                <i class="fa-solid fa-arrow-right"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Sticky Header Bar -->
+    <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-sky-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20 gap-4">
+                
+                <div class="flex items-center space-x-3 cursor-pointer shrink-0" onclick="switchSlide(1)">
+                    <!-- Logo SDN Ploso di Header Navigasi -->
+                    <div class="w-12 h-12 flex items-center justify-center shrink-0">
+                        <img src="LOGO_SDN_PLOSO-removebg-preview.png" alt="Logo SDN Ploso" class="max-h-full max-w-full object-contain">
+                    </div>
+                    <div>
+                        <h1 class="heading-font font-bold text-xl sm:text-2xl text-slate-800 leading-none">SD NEGERI PLOSO</h1>
+                        <p class="text-[11px] font-semibold text-sky-600 tracking-wide mt-1">KOTA JOMBANG • MEDIA TPACK DIGITAL</p>
+                    </div>
+                </div>
+
+                <div id="header-student-badge" class="hidden sm:flex items-center space-x-2 bg-sky-100 border border-sky-300 px-3.5 py-1.5 rounded-2xl text-xs font-bold text-sky-800 shrink-0">
+                    <i class="fa-solid fa-circle-user text-sky-600 text-base"></i>
+                    <span id="badge-student-info">Siswa: - (No: -)</span>
+                </div>
+
+                <nav class="hidden lg:flex items-center space-x-1 bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
+                    <button onclick="switchSlide(1)" id="top-nav-1" class="top-nav-btn active-tab"><i class="fa-solid fa-house mr-1.5"></i> Beranda</button>
+                    <button onclick="switchSlide(2)" id="top-nav-2" class="top-nav-btn"><i class="fa-solid fa-book-bookmark mr-1.5"></i> Materi & Simulasi</button>
+                    <button onclick="switchSlide(10)" id="top-nav-10" class="top-nav-btn"><i class="fa-solid fa-gamepad mr-1.5"></i> Kuis 5 Level</button>
+                    <button onclick="switchSlide(11)" id="top-nav-11" class="top-nav-btn"><i class="fa-solid fa-clipboard-check mr-1.5"></i> Asesmen</button>
+                    <button onclick="switchSlide(12)" id="top-nav-12" class="top-nav-btn"><i class="fa-solid fa-heart-pulse mr-1.5"></i> Refleksi</button>
+                    <button onclick="switchSlide(13)" id="top-nav-13" class="top-nav-btn"><i class="fa-solid fa-users mr-1.5"></i> Profil & IT</button>
+                </nav>
+
+                <button onclick="toggleMobileDropdown()" class="lg:hidden p-3 rounded-2xl bg-sky-50 text-sky-700 hover:bg-sky-100 focus:outline-none">
+                    <i class="fa-solid fa-bars text-xl"></i>
+                </button>
+            </div>
+        </div>
+
+        <div id="mobile-menu-dropdown" class="hidden lg:hidden border-t border-slate-200 bg-white/95 px-4 pt-3 pb-5 space-y-2 shadow-xl">
+            <button onclick="switchSlide(1); toggleMobileDropdown()" class="w-full text-left p-3 rounded-xl font-semibold text-slate-700 hover:bg-sky-50 flex items-center"><i class="fa-solid fa-house w-8 text-sky-600"></i> Beranda Utama</button>
+            <button onclick="switchSlide(2); toggleMobileDropdown()" class="w-full text-left p-3 rounded-xl font-semibold text-slate-700 hover:bg-sky-50 flex items-center"><i class="fa-solid fa-book-bookmark w-8 text-sky-600"></i> Materi & Multisimulasi</button>
+            <button onclick="switchSlide(10); toggleMobileDropdown()" class="w-full text-left p-3 rounded-xl font-semibold text-slate-700 hover:bg-sky-50 flex items-center"><i class="fa-solid fa-gamepad w-8 text-sky-600"></i> Kuis Interaktif 5 Level</button>
+            <button onclick="switchSlide(11); toggleMobileDropdown()" class="w-full text-left p-3 rounded-xl font-semibold text-slate-700 hover:bg-sky-50 flex items-center"><i class="fa-solid fa-clipboard-check w-8 text-sky-600"></i> Asesmen 10 Soal Otomatis</button>
+            <button onclick="switchSlide(12); toggleMobileDropdown()" class="w-full text-left p-3 rounded-xl font-semibold text-slate-700 hover:bg-sky-50 flex items-center"><i class="fa-solid fa-heart-pulse w-8 text-sky-600"></i> Refleksi Siswa</button>
+            <button onclick="switchSlide(13); toggleMobileDropdown()" class="w-full text-left p-3 rounded-xl font-semibold text-slate-700 hover:bg-sky-50 flex items-center"><i class="fa-solid fa-users w-8 text-sky-600"></i> Profil SD Ploso & Tim IT</button>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full">
+
+        <!-- Global Progress Bar -->
+        <div class="mb-8 glass-card p-4 rounded-3xl border border-sky-200">
+            <div class="flex items-center justify-between text-xs font-bold text-slate-600 mb-2">
+                <span id="current-slide-title" class="flex items-center">
+                    <span class="w-3 h-3 bg-sky-500 rounded-full mr-2 animate-ping"></span>
+                    <span id="title-text-node">Langkah 1 dari 13: Beranda Utama</span>
+                </span>
+                <span id="current-percentage-node" class="bg-sky-100 text-sky-700 px-3 py-1 rounded-full font-black">8% Selesai</span>
+            </div>
+            <div class="w-full bg-slate-200/70 rounded-full h-3.5 overflow-hidden p-0.5 border border-slate-200">
+                <div id="slide-progress-bar" class="bg-gradient-to-r from-sky-500 via-cyan-400 to-emerald-400 h-2.5 rounded-full transition-all duration-500 shadow-md" style="width: 7.69%;"></div>
+            </div>
+        </div>
+
+        <!-- SLIDE 1: HOME BERANDA -->
+        <section id="slide-1" class="slide-content space-y-10">
+            <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-sky-700 via-sky-600 to-cyan-600 text-white p-8 sm:p-14 shadow-2xl">
+                <div class="relative z-10 grid lg:grid-cols-12 gap-8 items-center">
+                    <div class="lg:col-span-7 space-y-6">
+                        <div class="inline-flex items-center space-x-2 bg-white/15 backdrop-blur-md px-4 py-2 rounded-full border border-white/25">
+                            <span class="w-3 h-3 rounded-full bg-emerald-400 animate-pulse"></span>
+                            <span class="text-xs font-bold tracking-wider uppercase text-cyan-100">Kurikulum Merdeka • Kelas 5 SD</span>
+                        </div>
+
+                        <h2 class="heading-font text-3xl sm:text-5xl font-extrabold text-white leading-tight">
+                            Jelajahi Dunia Unik <br>
+                            <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-400 drop-shadow">Bilangan Bulat!</span>
+                        </h2>
+
+                        <p class="text-sky-100 text-sm sm:text-base leading-relaxed">
+                            Media Pembelajaran Digital Interaktif Berbasis <strong>TPACK</strong> persembahan <strong>SD Negeri Ploso (Kota Jombang)</strong>. Dilengkapi dengan simulasi Katak Melompat, Submarine Kedalaman Laut, Termometer Suhu, Kuis 5 Level, dan Evaluasi Asesmen Otomatis!
+                        </p>
+
+                        <div class="flex flex-wrap gap-4 pt-4">
+                            <button onclick="switchSlide(2)" class="px-8 py-4 bg-amberCustom hover:bg-amber-400 text-slate-900 heading-font font-bold text-lg rounded-2xl shadow-xl hover:scale-105 transition flex items-center space-x-3">
+                                <span>Mulai Belajar Modul 1</span>
+                                <i class="fa-solid fa-circle-arrow-right text-xl"></i>
+                            </button>
+                            <button onclick="switchSlide(10)" class="px-8 py-4 bg-white/20 hover:bg-white/30 text-white border border-white/40 heading-font font-bold text-lg rounded-2xl backdrop-blur-md transition flex items-center space-x-3">
+                                <i class="fa-solid fa-gamepad text-amber-300"></i>
+                                <span>Main Kuis 5 Level</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-5 flex justify-center">
+                        <div class="glass-card p-6 rounded-3xl border border-white/50 shadow-2xl w-full max-w-md text-slate-800 space-y-6 text-center">
+                            <div class="flex items-center justify-between border-b pb-3 text-xs font-bold text-sky-700">
+                                <span><i class="fa-solid fa-laptop-code mr-1"></i> SPESIFIKASI TPACK</span>
+                                <span class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full">13 Modul Runtut</span>
+                            </div>
+
+                            <div class="py-4 space-y-3">
+                                <div class="flex justify-center items-center space-x-3 text-3xl heading-font font-extrabold">
+                                    <span class="px-4 py-2 bg-rose-500 text-white rounded-2xl shadow-lg -rotate-6 transform hover:rotate-0 transition">-15</span>
+                                    <span class="px-4 py-2 bg-slate-700 text-white rounded-2xl shadow-lg">0</span>
+                                    <span class="px-4 py-2 bg-emerald-500 text-white rounded-2xl shadow-lg rotate-6 transform hover:rotate-0 transition">+25</span>
+                                </div>
+                                <p class="text-xs font-semibold text-slate-500">Visualisasi konsep Positif, Nol, dan Negatif</p>
+                            </div>
+
+                            <div class="grid grid-cols-3 gap-2 text-center text-xs">
+                                <div class="p-2.5 bg-sky-50 rounded-xl font-bold text-sky-800">
+                                    <i class="fa-solid fa-frog text-emerald-500 text-lg block mb-1"></i> Katak
+                                </div>
+                                <div class="p-2.5 bg-sky-50 rounded-xl font-bold text-sky-800">
+                                    <i class="fa-solid fa-ship text-blue-500 text-lg block mb-1"></i> Submarine
+                                </div>
+                                <div class="p-2.5 bg-sky-50 rounded-xl font-bold text-sky-800">
+                                    <i class="fa-solid fa-temperature-full text-rose-500 text-lg block mb-1"></i> Suhu
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 2: MODUL 1 -->
+        <section id="slide-2" class="slide-content hidden space-y-8">
+            <div class="glass-card p-8 rounded-3xl border border-sky-100 space-y-4">
+                <div class="flex items-center justify-between">
+                    <span class="bg-sky-600 text-white text-xs heading-font font-bold px-3.5 py-1.5 rounded-full uppercase">Modul 1</span>
+                    <button onclick="speakTextFemale('Modul 1. Konsep Dasar Bilangan Bulat. Bilangan bulat adalah himpunan bilangan yang terdiri dari bilangan bulat negatif, angka nol, dan bilangan bulat positif.')" class="px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl font-bold text-xs shadow-md transition flex items-center space-x-2">
+                        <i class="fa-solid fa-circle-play text-lg"></i>
+                        <span>🔊 Baca Materi (Suara Wanita)</span>
+                    </button>
+                </div>
+                <h2 class="heading-font text-2xl sm:text-3xl font-extrabold text-slate-800">Konsep Dasar Bilangan Bulat</h2>
+                <p class="text-slate-600 text-sm leading-relaxed">
+                    Bilangan bulat adalah himpunan bilangan yang terdiri dari <strong>bilangan bulat negatif</strong>, <strong>angka nol</strong>, dan <strong>bilangan bulat positif</strong> (tanpa bentuk pecahan atau desimal).
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="glass-card p-6 rounded-3xl border-2 border-rose-200 space-y-4 hover:shadow-xl transition">
+                    <div class="w-14 h-14 bg-rose-500 text-white rounded-2xl flex items-center justify-center heading-font text-3xl font-bold shadow-lg shadow-rose-500/30">-</div>
+                    <h3 class="heading-font text-xl font-bold text-rose-900">Bilangan Negatif</h3>
+                    <p class="text-xs text-slate-600 leading-relaxed">Nilainya kurang dari nol. Selalu ditulis dengan tanda minus (-).</p>
+                </div>
+                <div class="glass-card p-6 rounded-3xl border-2 border-slate-300 space-y-4 hover:shadow-xl transition">
+                    <div class="w-14 h-14 bg-slate-700 text-white rounded-2xl flex items-center justify-center heading-font text-3xl font-bold shadow-lg shadow-slate-700/30">0</div>
+                    <h3 class="heading-font text-xl font-bold text-slate-900">Bilangan Netral (Nol)</h3>
+                    <p class="text-xs text-slate-600 leading-relaxed">Nol bukanlah bilangan positif maupun negatif.</p>
+                </div>
+                <div class="glass-card p-6 rounded-3xl border-2 border-emerald-200 space-y-4 hover:shadow-xl transition">
+                    <div class="w-14 h-14 bg-emerald-500 text-white rounded-2xl flex items-center justify-center heading-font text-3xl font-bold shadow-lg shadow-emerald-500/30">+</div>
+                    <h3 class="heading-font text-xl font-bold text-emerald-900">Bilangan Positif</h3>
+                    <p class="text-xs text-slate-600 leading-relaxed">Nilainya lebih besar dari nol. Biasanya ditulis tanpa tanda (+).</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 3: MODUL 2 MEMBANDINGKAN BILANGAN -->
+        <section id="slide-3" class="slide-content hidden space-y-8">
+            <div class="glass-card p-8 rounded-3xl border border-sky-100 space-y-3">
+                <div class="flex items-center justify-between">
+                    <span class="bg-indigo-600 text-white text-xs heading-font font-bold px-3.5 py-1.5 rounded-full uppercase">Modul 2</span>
+                    <button onclick="speakTextFemale('Modul 2. Membandingkan dan mengurutkan bilangan bulat. Semakin ke kanan posisi bilangan pada garis bilangan, nilainya semakin besar. Semakin ke kiri, nilainya semakin kecil.')" class="px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl font-bold text-xs shadow-md transition flex items-center space-x-2">
+                        <i class="fa-solid fa-circle-play text-lg"></i>
+                        <span>🔊 Baca Materi (Suara Wanita)</span>
+                    </button>
+                </div>
+                <h2 class="heading-font text-2xl sm:text-3xl font-extrabold text-slate-800">Membandingkan & Mengurutkan Bilangan Bulat</h2>
+                <p class="text-slate-600 text-sm">Semakin ke kanan posisi bilangan pada garis bilangan, nilainya semakin BESAR. Semakin ke kiri, nilainya semakin KECIL.</p>
+            </div>
+
+            <div class="glass-card p-8 rounded-3xl border border-indigo-200 space-y-6">
+                <h3 class="heading-font text-xl font-bold text-indigo-900"><i class="fa-solid fa-scale-balanced mr-2"></i> Simulator Pembanding Nilai</h3>
+                
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-6 p-6 bg-indigo-50 rounded-2xl border border-indigo-200">
+                    <input type="number" id="comp-a" value="-8" class="w-24 p-4 text-center border-2 border-indigo-300 rounded-2xl font-bold text-xl text-slate-800">
+                    
+                    <div id="comp-symbol" class="w-16 h-16 bg-indigo-600 text-white rounded-2xl flex items-center justify-center heading-font text-3xl font-black shadow-lg">?</div>
+                    
+                    <input type="number" id="comp-b" value="-3" class="w-24 p-4 text-center border-2 border-indigo-300 rounded-2xl font-bold text-xl text-slate-800">
+                </div>
+
+                <button onclick="compareNumbers()" class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white heading-font font-bold rounded-xl shadow-md transition">
+                    Bandingkan Sekarang!
+                </button>
+
+                <div id="comp-result-text" class="p-4 bg-white rounded-xl text-center text-xs font-bold text-slate-700 border border-slate-200">
+                    Klik tombol untuk membandingkan dua bilangan di atas.
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 4: MODUL 3 PENJUMLAHAN -->
+        <section id="slide-4" class="slide-content hidden space-y-8">
+            <div class="glass-card p-8 rounded-3xl border border-sky-100 space-y-3">
+                <div class="flex items-center justify-between">
+                    <span class="bg-emerald-600 text-white text-xs heading-font font-bold px-3.5 py-1.5 rounded-full uppercase">Modul 3</span>
+                    <button onclick="speakTextFemale('Modul 3. Penjumlahan Bilangan Bulat. Menambah bilangan positif sama dengan bergerak ke kanan. Menambah bilangan negatif sama dengan bergerak ke kiri.')" class="px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl font-bold text-xs shadow-md transition flex items-center space-x-2">
+                        <i class="fa-solid fa-circle-play text-lg"></i>
+                        <span>🔊 Baca Materi (Suara Wanita)</span>
+                    </button>
+                </div>
+                <h2 class="heading-font text-2xl sm:text-3xl font-extrabold text-slate-800">Penjumlahan Bilangan Bulat</h2>
+                <p class="text-slate-600 text-sm">Menambah bilangan positif = bergerak ke KANAN ▶. Menambah bilangan negatif = bergerak ke KIRI ◀.</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="glass-card p-6 rounded-3xl border border-emerald-200 space-y-3">
+                    <span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full">Aturan 1</span>
+                    <h3 class="heading-font text-lg font-bold text-slate-800">Tanda Sama (Positif + Positif / Negatif + Negatif)</h3>
+                    <p class="text-xs text-slate-600 leading-relaxed">Jumlahkan angkanya, hasilnya mengikuti tanda kedua bilangan tersebut.<br><strong>Contoh:</strong> -5 + (-3) = -8</p>
+                </div>
+                <div class="glass-card p-6 rounded-3xl border border-emerald-200 space-y-3">
+                    <span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full">Aturan 2</span>
+                    <h3 class="heading-font text-lg font-bold text-slate-800">Tanda Beda (Positif + Negatif)</h3>
+                    <p class="text-xs text-slate-600 leading-relaxed">Cari selisih angka terbesar dikurangi angka terkecil. Tanda hasil ikuti angka terbesar.<br><strong>Contoh:</strong> -9 + 12 = 3</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 5: MODUL 4 PENGURANGAN -->
+        <section id="slide-5" class="slide-content hidden space-y-8">
+            <div class="glass-card p-8 rounded-3xl border border-sky-100 space-y-3">
+                <div class="flex items-center justify-between">
+                    <span class="bg-amber-600 text-white text-xs heading-font font-bold px-3.5 py-1.5 rounded-full uppercase">Modul 4</span>
+                    <button onclick="speakTextFemale('Modul 4. Pengurangan Bilangan Bulat. Mengurangi suatu bilangan sama artinya dengan menambahkan lawan dari bilangan tersebut.')" class="px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl font-bold text-xs shadow-md transition flex items-center space-x-2">
+                        <i class="fa-solid fa-circle-play text-lg"></i>
+                        <span>🔊 Baca Materi (Suara Wanita)</span>
+                    </button>
+                </div>
+                <h2 class="heading-font text-2xl sm:text-3xl font-extrabold text-slate-800">Pengurangan Bilangan Bulat</h2>
+                <p class="text-slate-600 text-sm">Mengurangi suatu bilangan sama artinya dengan MENAMBAHKAN LAWAN (invers) dari bilangan tersebut!</p>
+            </div>
+
+            <div class="glass-card p-8 rounded-3xl border border-amber-200 text-center space-y-4">
+                <div class="text-3xl heading-font font-black text-amber-800">a - b = a + (-b)</div>
+                <div class="text-3xl heading-font font-black text-emerald-600">a - (-b) = a + b</div>
+                <p class="text-xs text-slate-600">Contoh: 7 - (-5) berubah menjadi 7 + 5 = 12</p>
+            </div>
+        </section>
+
+        <!-- SLIDE 6: MODUL 5 PERKALIAN & PEMBAGIAN -->
+        <section id="slide-6" class="slide-content hidden space-y-8">
+            <div class="glass-card p-8 rounded-3xl border border-sky-100 space-y-3">
+                <div class="flex items-center justify-between">
+                    <span class="bg-rose-600 text-white text-xs heading-font font-bold px-3.5 py-1.5 rounded-full uppercase">Modul 5</span>
+                    <button onclick="speakTextFemale('Modul 5. Perkalian dan Pembagian Bilangan Bulat. Jika tanda sama hasilnya positif. Jika tanda beda hasilnya negatif.')" class="px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl font-bold text-xs shadow-md transition flex items-center space-x-2">
+                        <i class="fa-solid fa-circle-play text-lg"></i>
+                        <span>🔊 Baca Materi (Suara Wanita)</span>
+                    </button>
+                </div>
+                <h2 class="heading-font text-2xl sm:text-3xl font-extrabold text-slate-800">Perkalian & Pembagian Bilangan Bulat</h2>
+            </div>
+
+            <div class="grid sm:grid-cols-2 gap-6">
+                <div class="glass-card p-6 rounded-3xl border-2 border-emerald-200 space-y-3 text-center">
+                    <span class="text-2xl font-black text-emerald-600">+</span>
+                    <h3 class="heading-font font-bold text-slate-800">Tanda SAMA = POSITIF</h3>
+                    <p class="text-xs text-slate-600">(+) × (+) = (+)<br>(-) × (-) = (+)</p>
+                </div>
+                <div class="glass-card p-6 rounded-3xl border-2 border-rose-200 space-y-3 text-center">
+                    <span class="text-2xl font-black text-rose-600">-</span>
+                    <h3 class="heading-font font-bold text-slate-800">Tanda BEDA = NEGATIF</h3>
+                    <p class="text-xs text-slate-600">(+) × (-) = (-)<br>(-) × (+) = (-)</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 7: MODUL 6 OPERASI CAMPURAN -->
+        <section id="slide-7" class="slide-content hidden space-y-8">
+            <div class="glass-card p-8 rounded-3xl border border-sky-100 space-y-3">
+                <div class="flex items-center justify-between">
+                    <span class="bg-purple-600 text-white text-xs heading-font font-bold px-3.5 py-1.5 rounded-full uppercase">Modul 6</span>
+                    <button onclick="speakTextFemale('Modul 6. Operasi Hitung Campuran Aturan Kibataku. Kerjakan berurutan mulai dari tanda kurung, perkalian dan pembagian, lalu penjumlahan dan pengurangan.')" class="px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl font-bold text-xs shadow-md transition flex items-center space-x-2">
+                        <i class="fa-solid fa-circle-play text-lg"></i>
+                        <span>🔊 Baca Materi (Suara Wanita)</span>
+                    </button>
+                </div>
+                <h2 class="heading-font text-2xl sm:text-3xl font-extrabold text-slate-800">Operasi Hitung Campuran (Aturan Kibataku)</h2>
+                <p class="text-slate-600 text-sm">Kerjakan berurutan: Kurung ▶ Kali & Bagi ▶ Tambah & Kurang.</p>
+            </div>
+        </section>
+
+        <!-- SLIDE 8: MODUL 7 SIMULASI KATAK MELOMPAT -->
+        <section id="slide-8" class="slide-content hidden space-y-8">
+            <div class="glass-card p-8 rounded-3xl border border-sky-100 space-y-3">
+                <div class="flex items-center justify-between">
+                    <span class="bg-cyan-600 text-white text-xs heading-font font-bold px-3.5 py-1.5 rounded-full uppercase">Modul 7</span>
+                    <button onclick="speakTextFemale('Modul 7. Simulasi Katak Melompat pada garis bilangan. Masukkan angka awal dan langkah lompatan untuk melihat pergerakan katak.')" class="px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl font-bold text-xs shadow-md transition flex items-center space-x-2">
+                        <i class="fa-solid fa-circle-play text-lg"></i>
+                        <span>🔊 Baca Materi (Suara Wanita)</span>
+                    </button>
+                </div>
+                <h2 class="heading-font text-2xl sm:text-3xl font-extrabold text-slate-800">Game Garis Bilangan & Simulasi Katak Melompat</h2>
+            </div>
+
+            <div class="glass-card p-8 rounded-3xl border border-emerald-200 shadow-xl space-y-8">
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-4 bg-emerald-50/80 p-4 rounded-2xl border border-emerald-200">
+                    <div class="text-xs font-bold text-emerald-900 flex items-center space-x-2">
+                        <i class="fa-solid fa-calculator text-emerald-600 text-lg"></i>
+                        <span>Hitung & Simulasikan Pergerakan:</span>
+                    </div>
+                    <div class="flex items-center space-x-2 w-full sm:w-auto">
+                        <input type="number" id="frog-start" value="-3" class="w-16 p-2 text-center border-2 border-emerald-300 rounded-xl font-bold text-sm focus:outline-none">
+                        <select id="frog-op" class="p-2 border-2 border-emerald-300 rounded-xl font-bold text-sm text-emerald-800 focus:outline-none">
+                            <option value="+">+</option>
+                            <option value="-">-</option>
+                        </select>
+                        <input type="number" id="frog-step" value="7" class="w-16 p-2 text-center border-2 border-emerald-300 rounded-xl font-bold text-sm focus:outline-none">
+                        <button onclick="runFrogSimulation()" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center space-x-1">
+                            <i class="fa-solid fa-play"></i>
+                            <span>Lompat! 🐸</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="relative py-12 px-4 bg-slate-900 rounded-3xl overflow-x-auto">
+                    <div id="number-line-container" class="min-w-[700px] flex justify-between items-center relative border-b-4 border-amber-400 pb-4">
+                        <div id="frog-character" class="absolute -top-12 transition-all duration-500 flex flex-col items-center z-20" style="left: 35%;">
+                            <div class="text-4xl animate-bounce" id="frog-icon">🐸</div>
+                            <span id="frog-badge" class="bg-emerald-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-md mt-1">-3</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="frog-status-text" class="p-4 bg-slate-100 rounded-2xl text-xs font-bold text-slate-700 border border-slate-200 text-center">
+                    Katak berada di posisi awal: -3
+                </div>
+            </div>
+        </section>
+        
+        <!-- SLIDE 9: MULTISIMULASI & VIDEO YOUTUBE (DI AKHIR MATERI & SIMULASI) -->
+        <section id="slide-9" class="slide-content hidden space-y-8">
+            <div class="glass-card p-8 rounded-3xl border border-sky-100 space-y-3">
+                <span class="bg-teal-600 text-white text-xs heading-font font-bold px-3.5 py-1.5 rounded-full uppercase">Modul 8</span>
+                <h2 class="heading-font text-2xl sm:text-3xl font-extrabold text-slate-800">Multisimulasi Realitas Kehidupan & Video Pembelajaran</h2>
+            </div>
+
+            <div class="grid lg:grid-cols-2 gap-8">
+                <!-- Simulator Kapal Selam -->
+                <div class="glass-card p-6 rounded-3xl border border-blue-200 space-y-6">
+                    <h3 class="heading-font text-xl font-bold text-blue-900"><i class="fa-solid fa-ship text-blue-600 mr-2"></i> Simulator Kapal Selam</h3>
+                    <div class="relative h-48 bg-gradient-to-b from-sky-300 via-blue-600 to-slate-900 rounded-2xl overflow-hidden p-4">
+                        <div id="submarine-sprite" class="absolute left-1/2 -translate-x-1/2 transition-all duration-500 animate-sub-float" style="top: 40%;">
+                            <div class="bg-amber-400 text-slate-900 px-4 py-2 rounded-full font-black text-xs shadow-lg flex items-center space-x-2">
+                                <i class="fa-solid fa-ship"></i>
+                                <span id="sub-depth-readout">-50m</span>
+                            </div>
+                        </div>
+                    </div>
+                    <input type="range" min="-100" max="0" value="-50" step="5" oninput="updateSubmarine(this.value)" class="w-full h-3 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
+                </div>
+
+                <!-- Video YouTube di Akhir Menu Materi & Simulasi -->
+                <div class="glass-card p-6 rounded-3xl border border-rose-200 space-y-4">
+                    <h3 class="heading-font text-xl font-bold text-slate-800"><i class="fa-solid fa-circle-play text-rose-600 mr-2"></i> Animasi Pembelajaran YouTube</h3>
+                    
+                    <div class="relative aspect-video rounded-2xl overflow-hidden shadow-lg border border-slate-200 bg-slate-900 flex flex-col items-center justify-center text-center p-6 space-y-4">
+                        <div class="w-16 h-16 bg-rose-600 text-white rounded-full flex items-center justify-center text-3xl shadow-lg shadow-rose-600/40 animate-pulse">
+                            <i class="fa-solid fa-play ml-1"></i>
+                        </div>
+                        <div>
+                            <h4 class="heading-font font-bold text-lg text-white">Video Pembelajaran Bilangan Bulat</h4>
+                            <p class="text-xs text-slate-300 mt-1">Pembahasan Seru & Interaktif Matematika SD</p>
+                        </div>
+                        <a href="https://www.youtube.com/watch?v=-hudLTIDUXk" target="_blank" rel="noopener noreferrer" class="px-6 py-3 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs rounded-xl shadow-xl hover:scale-105 transition flex items-center space-x-2">
+                            <i class="fa-brands fa-youtube text-lg"></i>
+                            <span>Putar Video Langsung di YouTube</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 10: KUIS INTERAKTIF 5 LEVEL LENGKAP -->
+        <section id="slide-10" class="slide-content hidden space-y-8">
+            <div class="glass-card p-8 rounded-3xl border border-purple-200 flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div>
+                    <span class="bg-purple-600 text-white text-xs heading-font font-bold px-3.5 py-1.5 rounded-full uppercase">Kuis Interaktif</span>
+                    <h2 class="heading-font text-2xl sm:text-3xl font-extrabold text-slate-800 mt-2">Tantangan 5 Level Pintar</h2>
+                </div>
+                <div id="quiz-score-display" class="bg-purple-600 text-white px-6 py-3 rounded-2xl heading-font font-black text-xl shadow-lg">Skor Kuis: 0</div>
+            </div>
+
+            <div id="quiz-interactive-card" class="glass-card p-8 rounded-3xl border border-purple-200 space-y-6"></div>
+        </section>
+
+        <!-- SLIDE 11: ASESMEN OTOMATIS -->
+        <section id="slide-11" class="slide-content hidden space-y-8">
+            <div class="glass-card p-8 rounded-3xl border border-sky-100 space-y-4">
+                <span class="bg-emerald-600 text-white text-xs heading-font font-bold px-3.5 py-1.5 rounded-full uppercase">Langkah 11</span>
+                <h2 class="heading-font text-2xl sm:text-3xl font-extrabold text-slate-800">Asesmen Otomatis 10 Soal Integratif</h2>
+                <p class="text-slate-600 text-sm">Jawab tiap soal berurutan dengan tombol "Selanjutnya ▶" untuk mengirim hasil ke Spreadsheet Guru!</p>
+            </div>
+
+            <div id="exam-start-box" class="glass-card p-10 rounded-3xl border border-emerald-200 text-center space-y-6 max-w-2xl mx-auto">
+                <div class="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-3xl flex items-center justify-center text-4xl mx-auto">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <h3 class="heading-font text-2xl font-bold text-slate-800">Konfirmasi Peserta Ujian</h3>
+                <div class="p-4 bg-sky-50 rounded-2xl border border-sky-200 text-sm font-semibold text-sky-900 space-y-1">
+                    <p>Nama: <span id="exam-confirm-name" class="font-bold text-sky-700">-</span></p>
+                    <p>No. Absen: <span id="exam-confirm-no" class="font-bold text-sky-700">-</span></p>
+                </div>
+                <button onclick="startOfficialExam()" class="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white heading-font font-bold text-lg rounded-2xl shadow-xl transition">
+                    Mulai Kerjakan Asesmen
+                </button>
+            </div>
+
+            <div id="exam-active-box" class="hidden space-y-6 max-w-3xl mx-auto">
+                <div id="exam-question-wrapper" class="glass-card p-8 rounded-3xl border border-emerald-200 space-y-6"></div>
+                
+                <div class="flex justify-between items-center gap-4">
+                    <button id="btn-prev-exam" onclick="changeExamQuestion(-1)" class="px-6 py-3.5 bg-slate-200 hover:bg-slate-300 text-slate-700 heading-font font-bold rounded-2xl transition flex items-center space-x-2">
+                        <i class="fa-solid fa-arrow-left"></i>
+                        <span>Sebelumnya</span>
+                    </button>
+
+                    <button id="btn-next-exam" onclick="changeExamQuestion(1)" class="px-8 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white heading-font font-bold rounded-2xl shadow-lg transition flex items-center space-x-2">
+                        <span>Selanjutnya ▶</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+
+                    <button id="btn-submit-exam" onclick="finishOfficialExam()" class="hidden px-8 py-3.5 bg-sky-700 hover:bg-sky-600 text-white heading-font font-bold rounded-2xl shadow-xl transition flex items-center space-x-2">
+                        <i class="fa-solid fa-paper-plane"></i>
+                        <span>Kirim Jawaban Akhir</span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="exam-result-box" class="hidden glass-card p-10 rounded-3xl border border-emerald-300 text-center space-y-6 max-w-2xl mx-auto">
+                <h3 class="heading-font text-3xl font-extrabold text-slate-800">Hasil Asesmen Anda</h3>
+                <div id="final-score-badge" class="text-6xl heading-font font-black text-emerald-600">0</div>
+                <div id="sheet-sending-status" class="text-xs font-bold text-sky-600 flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-cloud-arrow-up animate-bounce"></i>
+                    <span>Mengirimkan hasil ke Spreadsheet...</span>
+                </div>
+                <button onclick="showCertificateModal()" class="px-8 py-4 bg-amberCustom hover:bg-amber-400 text-slate-900 heading-font font-bold text-lg rounded-2xl shadow-xl transition">
+                    <i class="fa-solid fa-award mr-2"></i> Cetak Sertifikat Digital
+                </button>
+            </div>
+        </section>
+
+        <!-- SLIDE 12: MENU REFLEKSI SISWA -->
+        <section id="slide-12" class="slide-content hidden space-y-8">
+            <div class="glass-card p-8 rounded-3xl border border-sky-100 space-y-3">
+                <span class="bg-rose-500 text-white text-xs heading-font font-bold px-3.5 py-1.5 rounded-full uppercase">Langkah 12</span>
+                <h2 class="heading-font text-2xl sm:text-3xl font-extrabold text-slate-800">Refleksi Pembelajaran Siswa</h2>
+                <p class="text-slate-600 text-sm">Bagaimana perasaanmu setelah mempelajari materi Bilangan Bulat hari ini?</p>
+            </div>
+
+            <div class="glass-card p-8 rounded-3xl border border-rose-200 space-y-8 max-w-3xl mx-auto">
+                <div>
+                    <label class="heading-font font-bold text-base text-slate-800 block mb-4 text-center">Pilih Perasaanmu Saat Ini:</label>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+                        <button onclick="selectEmojiFeel('😍 Sangat Senang', this)" class="emoji-btn p-4 rounded-2xl border-2 border-slate-200 hover:border-rose-400 transition flex flex-col items-center space-y-2">
+                            <span class="text-4xl">😍</span>
+                            <span class="text-xs font-bold text-slate-700">Sangat Senang</span>
+                        </button>
+                        <button onclick="selectEmojiFeel('😊 Senang Paham', this)" class="emoji-btn p-4 rounded-2xl border-2 border-slate-200 hover:border-rose-400 transition flex flex-col items-center space-y-2">
+                            <span class="text-4xl">😊</span>
+                            <span class="text-xs font-bold text-slate-700">Senang Paham</span>
+                        </button>
+                        <button onclick="selectEmojiFeel('😐 Biasa Saja', this)" class="emoji-btn p-4 rounded-2xl border-2 border-slate-200 hover:border-rose-400 transition flex flex-col items-center space-y-2">
+                            <span class="text-4xl">😐</span>
+                            <span class="text-xs font-bold text-slate-700">Biasa Saja</span>
+                        </button>
+                        <button onclick="selectEmojiFeel('🤔 Masih Bingung', this)" class="emoji-btn p-4 rounded-2xl border-2 border-slate-200 hover:border-rose-400 transition flex flex-col items-center space-y-2">
+                            <span class="text-4xl">🤔</span>
+                            <span class="text-xs font-bold text-slate-700">Masih Bingung</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-xs font-bold text-slate-700 block mb-1">1. Bagian materi apa yang PALING KAMU SUKAI & PAHAMI?</label>
+                        <textarea id="ref-understood" rows="3" placeholder="Tuliskan di sini (Contoh: Saya suka saat simulasi katak melompat...)" class="w-full p-4 border-2 border-slate-300 rounded-2xl font-bold text-slate-800 text-xs focus:border-rose-500 focus:outline-none transition"></textarea>
+                    </div>
+
+                    <div>
+                        <label class="text-xs font-bold text-slate-700 block mb-1">2. Bagian mana yang BIKIN BINGUNG / INGIN KAMU TANYAKAN?</label>
+                        <textarea id="ref-confused" rows="3" placeholder="Tuliskan di sini (Contoh: Masih sedikit bingung perkalian minus kali minus...)" class="w-full p-4 border-2 border-slate-300 rounded-2xl font-bold text-slate-800 text-xs focus:border-rose-500 focus:outline-none transition"></textarea>
+                    </div>
+                </div>
+
+                <button onclick="submitStudentReflection()" class="w-full py-4 bg-rose-600 hover:bg-rose-500 text-white heading-font font-bold text-base rounded-2xl shadow-xl transition flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-paper-plane"></i>
+                    <span>Kirimkan Refleksi Saya</span>
+                </button>
+
+                <div id="reflection-status" class="hidden p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl text-xs font-bold text-center">
+                    <i class="fa-solid fa-circle-check text-emerald-600 mr-1"></i> Terima kasih! Refleksi belajarmu telah berhasil terkirim.
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 13: PROFIL SD PLOSO & TIM IT -->
+        <section id="slide-13" class="slide-content hidden space-y-8">
+            <div class="glass-card p-8 rounded-3xl border border-sky-100 space-y-3">
+                <span class="bg-blue-600 text-white text-xs heading-font font-bold px-3.5 py-1.5 rounded-full uppercase">Langkah 13</span>
+                <h2 class="heading-font text-2xl sm:text-3xl font-extrabold text-slate-800">Profil SD Negeri Ploso & Tim Pengembang IT</h2>
+            </div>
+
+            <div class="glass-card p-8 rounded-3xl border border-sky-200 space-y-6">
+                <div class="flex items-center space-x-4 border-b border-sky-100 pb-4">
+                    <div class="w-16 h-16 flex items-center justify-center">
+                        <img src="LOGO_SDN_PLOSO-removebg-preview.png" alt="Logo SDN Ploso" class="max-h-full max-w-full object-contain">
+                    </div>
+                    <div>
+                        <h3 class="heading-font text-2xl font-extrabold text-slate-800">PROFIL SD NEGERI PLOSO</h3>
+                        <p class="text-xs font-bold text-sky-600">BELAJAR • BERKARYA • BERKARAKTER • BERINOVASI</p>
+                    </div>
+                </div>
+
+                <p class="text-slate-600 text-sm leading-relaxed">
+                    SD Negeri Ploso merupakan sekolah yang berkomitmen menghadirkan pembelajaran yang aktif, kreatif, inovatif, berkarakter, dan berbasis teknologi. Pemanfaatan teknologi digital dikembangkan untuk mendukung pembelajaran yang menarik, interaktif, dan sesuai dengan kebutuhan peserta didik.
+                </p>
+
+                <div>
+                    <h4 class="heading-font font-bold text-lg text-slate-800 mb-3"><i class="fa-solid fa-seedling text-emerald-600 mr-2"></i> Fokus Sekolah</h4>
+                    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 text-xs font-bold text-emerald-900 flex items-center space-x-2">
+                            <i class="fa-solid fa-star text-emerald-600"></i>
+                            <span>Pendidikan berkarakter</span>
+                        </div>
+                        <div class="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 text-xs font-bold text-emerald-900 flex items-center space-x-2">
+                            <i class="fa-solid fa-leaf text-emerald-600"></i>
+                            <span>Sekolah peduli lingkungan</span>
+                        </div>
+                        <div class="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 text-xs font-bold text-emerald-900 flex items-center space-x-2">
+                            <i class="fa-solid fa-lightbulb text-emerald-600"></i>
+                            <span>Pembelajaran kreatif & inovatif</span>
+                        </div>
+                        <div class="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 text-xs font-bold text-emerald-900 flex items-center space-x-2">
+                            <i class="fa-solid fa-laptop-code text-emerald-600"></i>
+                            <span>Pemanfaatan teknologi digital</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card p-8 rounded-3xl border border-blue-200 space-y-6">
+                <div class="flex items-center space-x-4 border-b border-blue-100 pb-4">
+                    <div class="w-16 h-16 bg-blue-600 text-white rounded-2xl flex items-center justify-center text-3xl shadow-lg">
+                        <i class="fa-solid fa-users-gear"></i>
+                    </div>
+                    <div>
+                        <h3 class="heading-font text-2xl font-extrabold text-slate-800">TIM PENGEMBANG IT</h3>
+                        <p class="text-xs font-bold text-blue-600">SD NEGERI PLOSO • KOTA JOMBANG</p>
+                    </div>
+                </div>
+
+                <p class="text-slate-600 text-sm leading-relaxed">
+                    Tim Pengembang IT SD Negeri Ploso berperan dalam mendukung transformasi digital sekolah melalui pengembangan dan pengelolaan media pembelajaran serta sistem informasi sekolah.
+                </p>
+
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <h4 class="heading-font font-bold text-lg text-slate-800 mb-3"><i class="fa-solid fa-laptop text-blue-600 mr-2"></i> Bidang Pengembangan</h4>
+                        <ul class="space-y-2 text-xs font-semibold text-slate-700">
+                            <li class="p-3 bg-sky-50 rounded-xl border border-sky-200 flex items-center"><i class="fa-solid fa-check text-blue-600 mr-2"></i> Media pembelajaran digital</li>
+                            <li class="p-3 bg-sky-50 rounded-xl border border-sky-200 flex items-center"><i class="fa-solid fa-check text-blue-600 mr-2"></i> E-book dan materi interaktif</li>
+                            <li class="p-3 bg-sky-50 rounded-xl border border-sky-200 flex items-center"><i class="fa-solid fa-check text-blue-600 mr-2"></i> Kuis dan asesmen digital</li>
+                            <li class="p-3 bg-sky-50 rounded-xl border border-sky-200 flex items-center"><i class="fa-solid fa-check text-blue-600 mr-2"></i> CBT / ujian online</li>
+                            <li class="p-3 bg-sky-50 rounded-xl border border-sky-200 flex items-center"><i class="fa-solid fa-check text-blue-600 mr-2"></i> Website dan portal sekolah</li>
+                            <li class="p-3 bg-sky-50 rounded-xl border border-sky-200 flex items-center"><i class="fa-solid fa-check text-blue-600 mr-2"></i> Konten multimedia pendidikan</li>
+                        </ul>
+                    </div>
+
+                    <div class="flex flex-col justify-center bg-gradient-to-br from-blue-600 to-sky-700 text-white p-6 rounded-3xl shadow-xl space-y-4">
+                        <div class="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center text-2xl">
+                            <i class="fa-solid fa-bullseye text-amber-300"></i>
+                        </div>
+                        <h4 class="heading-font font-bold text-xl text-white">Tujuan Utama</h4>
+                        <blockquote class="text-sm font-medium italic text-sky-100 border-l-4 border-amber-400 pl-4">
+                            “Menghadirkan teknologi yang mudah, menarik, edukatif, dan bermanfaat untuk mendukung pembelajaran.”
+                        </blockquote>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Bottom Navigation Bar -->
+        <div class="mt-12 glass-card p-5 rounded-3xl border border-sky-200 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+            <button id="btn-prev-slide" onclick="navigateSlide(-1)" class="w-full sm:w-auto px-7 py-3.5 bg-slate-200 hover:bg-slate-300 text-slate-700 heading-font font-bold rounded-2xl transition flex items-center justify-center space-x-2">
+                <i class="fa-solid fa-arrow-left"></i>
+                <span>◀ Sebelumnya</span>
+            </button>
+
+            <div class="text-xs heading-font font-bold text-sky-800 text-center" id="nav-step-indicator-text">
+                Halaman 1 dari 13
+            </div>
+
+            <button id="btn-next-slide" onclick="navigateSlide(1)" class="w-full sm:w-auto px-8 py-3.5 bg-sky-600 hover:bg-sky-500 text-white heading-font font-bold rounded-2xl shadow-lg transition flex items-center justify-center space-x-2">
+                <span>Selanjutnya ▶</span>
+                <i class="fa-solid fa-arrow-right"></i>
+            </button>
+        </div>
+
+    </main>
+
+    <!-- CERTIFICATE MODAL -->
+    <div id="certificate-printable-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div id="printable-certificate" class="bg-white w-full max-w-3xl rounded-3xl shadow-2xl p-10 border-8 border-amber-400 text-center space-y-6">
+            <div class="text-sky-700 font-extrabold text-xs tracking-widest uppercase">SD NEGERI PLOSO • KOTA JOMBANG</div>
+            <h2 class="heading-font text-3xl font-black text-slate-800 uppercase">SERTIFIKAT KELULUSAN DIGITAL</h2>
+            <h3 id="cert-display-name" class="heading-font text-3xl font-black text-sky-800 underline decoration-amber-400">NAMA SISWA</h3>
+            <div id="cert-display-score" class="text-5xl heading-font font-black text-emerald-600">100</div>
+            
+            <div class="no-print pt-4 flex justify-center space-x-4">
+                <button onclick="window.print()" class="px-6 py-3 bg-sky-700 text-white font-bold rounded-xl shadow-md"><i class="fa-solid fa-print mr-2"></i> Cetak / Simpan PDF</button>
+                <button onclick="closeCertificateModal()" class="px-6 py-3 bg-slate-200 text-slate-700 font-bold rounded-xl">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // WEBHOOK GOOGLE APPS SCRIPT
+        const GOOGLE_SHEETS_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbyP7h_BohBE8R47rZE69tT2uoigV21cOxBjwzzmVpy5dps1PsFqtZ98M7rWXMjQy0Cr/exec";
+
+        let studentData = { name: "", no: "" };
+        let selectedFeeling = "";
+        let currentSlide = 1;
+        const totalSlides = 13;
+
+        const slideTitles = [
+            "Beranda Utama", "Modul 1: Konsep Bilangan Bulat", "Modul 2: Membandingkan & Mengurutkan",
+            "Modul 3: Penjumlahan Bilangan Bulat", "Modul 4: Pengurangan Bilangan Bulat",
+            "Modul 5: Perkalian & Pembagian", "Modul 6: Operasi Hitung Campuran",
+            "Modul 7: Simulasi Katak Melompat", "Modul 8: Multisimulasi Realitas & Video",
+            "Kuis Interaktif 5 Level", "Asesmen Otomatis 10 Soal", "Refleksi Siswa", "Profil SD Negeri Ploso & Tim IT"
+        ];
+
+        function handleStudentLogin() {
+            const name = document.getElementById('login-student-name').value.trim();
+            const no = document.getElementById('login-student-no').value.trim();
+
+            if (!name || !no) {
+                alert('Mohon isi Nama Lengkap dan Nomor Absen terlebih dahulu!');
+                return;
+            }
+
+            studentData.name = name;
+            studentData.no = no;
+
+            document.getElementById('badge-student-info').innerText = `Siswa: ${name} (No: ${no})`;
+            document.getElementById('header-student-badge').classList.remove('hidden');
+
+            document.getElementById('exam-confirm-name').innerText = name;
+            document.getElementById('exam-confirm-no').innerText = no;
+
+            document.getElementById('login-screen').classList.add('hidden');
+            SoundEngine.playFanfare();
+        }
+
+        function switchSlide(slideNum) {
+            if(slideNum < 1 || slideNum > totalSlides) return;
+            currentSlide = slideNum;
+            document.querySelectorAll('.slide-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`slide-${currentSlide}`).classList.remove('hidden');
+
+            const percentage = Math.round((currentSlide / totalSlides) * 100);
+            document.getElementById('slide-progress-bar').style.width = `${percentage}%`;
+            document.getElementById('title-text-node').innerText = `Langkah ${currentSlide} dari ${totalSlides}: ${slideTitles[currentSlide - 1]}`;
+            document.getElementById('current-percentage-node').innerText = `${percentage}% Selesai`;
+            document.getElementById('nav-step-indicator-text').innerText = `Halaman ${currentSlide} dari ${totalSlides}`;
+
+            document.querySelectorAll('.top-nav-btn').forEach(btn => btn.classList.remove('active-tab'));
+            const activeTopBtn = document.getElementById(`top-nav-${currentSlide}`);
+            if(activeTopBtn) activeTopBtn.classList.add('active-tab');
+
+            SoundEngine.playMenuJingle(currentSlide);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function navigateSlide(dir) {
+            switchSlide(currentSlide + dir);
+        }
+
+        function toggleMobileDropdown() {
+            document.getElementById('mobile-menu-dropdown').classList.toggle('hidden');
+        }
+
+        // ================= MODUL COMPARE ENGINE =================
+        function compareNumbers() {
+            const a = parseInt(document.getElementById('comp-a').value) || 0;
+            const b = parseInt(document.getElementById('comp-b').value) || 0;
+            const symEl = document.getElementById('comp-symbol');
+            const txtEl = document.getElementById('comp-result-text');
+
+            if (a > b) {
+                symEl.innerText = '>';
+                txtEl.innerText = `${a} LEBIH BESAR DARI ${b} (${a} > ${b})`;
+            } else if (a < b) {
+                symEl.innerText = '<';
+                txtEl.innerText = `${a} LEBIH KECIL DARI ${b} (${a} < ${b})`;
+            } else {
+                symEl.innerText = '=';
+                txtEl.innerText = `${a} SAMA DENGAN ${b} (${a} = ${b})`;
+            }
+            SoundEngine.playCorrect();
+        }
+
+        // ================= FROG SIMULATION =================
+        function initNumberLine() {
+            const container = document.getElementById('number-line-container');
+            let html = `<div id="frog-character" class="absolute -top-12 transition-all duration-500 flex flex-col items-center z-20" style="left: 35%;">
+                <div class="text-4xl animate-bounce" id="frog-icon">🐸</div>
+                <span id="frog-badge" class="bg-emerald-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-md mt-1">-3</span>
+            </div>`;
+
+            for(let i = -10; i <= 10; i++) {
+                html += `
+                    <div class="flex flex-col items-center text-xs text-slate-300 font-bold w-8">
+                        <span class="h-3 w-0.5 ${i===0?'bg-amber-400 h-5':'bg-slate-500'}"></span>
+                        <span class="${i===0?'text-amber-400 font-extrabold':''}">${i}</span>
+                    </div>
+                `;
+            }
+            container.innerHTML = html;
+        }
+
+        function runFrogSimulation() {
+            const start = parseInt(document.getElementById('frog-start').value) || 0;
+            const op = document.getElementById('frog-op').value;
+            const step = parseInt(document.getElementById('frog-step').value) || 0;
+            
+            let end = op === '+' ? start + step : start - step;
+            if(end > 10) end = 10;
+            if(end < -10) end = -10;
+
+            const percent = ((end + 10) / 20) * 90 + 5;
+            const frog = document.getElementById('frog-character');
+            
+            frog.classList.add('animate-jump');
+            SoundEngine.playFrogRibbit();
+
+            setTimeout(() => {
+                frog.style.left = `${percent}%`;
+                document.getElementById('frog-badge').innerText = end;
+                document.getElementById('frog-status-text').innerText = `Katak melompat dari ${start} sejauh ${step} langkah (${op}) ke posisi: ${end}`;
+            }, 200);
+
+            setTimeout(() => {
+                frog.classList.remove('animate-jump');
+            }, 600);
+        }
+
+        function updateSubmarine(val) {
+            document.getElementById('sub-depth-readout').innerText = `${val}m`;
+            const depthPercent = Math.abs(val); 
+            const sub = document.getElementById('submarine-sprite');
+            sub.style.top = `${15 + (depthPercent * 0.6)}%`;
+            SoundEngine.playClick();
+        }
+
+        // ================= KUIS 5 LEVEL ENGINE =================
+        const quizLevels = [
+            { level: 1, name: "Level 1: Pemula", q: "Manakah bilangan yang nilainya PALING KECIL?", opts: ["-12", "0", "5", "-2"], ans: 0 },
+            { level: 2, name: "Level 2: Dasar", q: "Berapa hasil dari -8 + 15?", opts: ["-23", "7", "-7", "23"], ans: 1 },
+            { level: 3, name: "Level 3: Menengah", q: "Hasil dari -6 × (-4) adalah ...", opts: ["-24", "-10", "24", "10"], ans: 2 },
+            { level: 4, name: "Level 4: Penerapan", q: "Suhu awal 18°C lalu turun 25°C. Suhu akhir adalah ...", opts: ["7°C", "-7°C", "-43°C", "43°C"], ans: 1 },
+            { level: 5, name: "Level 5: HOTS / Tantangan", q: "Satu tim skor -10, menang 3 kali (+5 tiap menang). Skor akhir tim ...", opts: ["15", "5", "-5", "25"], ans: 1 }
+        ];
+
+        let currentQuizIdx = 0;
+        let totalQuizScore = 0;
+
+        function renderQuizLevel() {
+            const quizCard = document.getElementById('quiz-interactive-card');
+            if(currentQuizIdx >= quizLevels.length) {
+                quizCard.innerHTML = `
+                    <div class="text-center space-y-4 py-6">
+                        <div class="text-5xl">🏆</div>
+                        <h3 class="heading-font text-2xl font-bold text-purple-900">Selamat! Kamu Tamat Kuis 5 Level!</h3>
+                        <p class="text-sm text-slate-600">Skor Total Kuis Kamu: <strong class="text-purple-700 text-xl">${totalQuizScore} / 50</strong></p>
+                        <button onclick="currentQuizIdx=0; totalQuizScore=0; renderQuizLevel();" class="px-6 py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl shadow-md">Mainkan Lagi 🔄</button>
+                    </div>
+                `;
+                return;
+            }
+
+            const currentQ = quizLevels[currentQuizIdx];
+            quizCard.innerHTML = `
+                <div class="flex justify-between items-center text-xs font-bold text-purple-700">
+                    <span class="bg-purple-100 px-3 py-1 rounded-full">${currentQ.name}</span>
+                    <span>Tingkat ${currentQuizIdx + 1} dari 5</span>
+                </div>
+                <h3 class="heading-font text-lg font-bold text-slate-800">${currentQ.q}</h3>
+                <div class="grid sm:grid-cols-2 gap-3">
+                    ${currentQ.opts.map((opt, i) => `
+                        <button onclick="checkQuizAnswer(${i})" class="p-4 text-left rounded-2xl border-2 border-slate-200 hover:border-purple-400 font-bold text-xs transition">
+                            ${['A','B','C','D'][i]}.${opt}
+                        </button>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function checkQuizAnswer(selectedIdx) {
+            const q = quizLevels[currentQuizIdx];
+            if(selectedIdx === q.ans) {
+                SoundEngine.playCorrect();
+                totalQuizScore += 10;
+                document.getElementById('quiz-score-display').innerText = `Skor Kuis: ${totalQuizScore}`;
+                alert("Jawabanmu Benar! +10 Poin 🎉");
+            } else {
+                SoundEngine.playWrong();
+                alert("Kurang Tepat, Tetap Semangat!");
+            }
+            currentQuizIdx++;
+            renderQuizLevel();
+        }
+
+        // ================= ASESMEN ENGINE =================
+        const examList = [
+            { q: "Hasil dari -15 + 20 adalah ...", opts: ["-35", "-5", "5", "35"], ans: 2 },
+            { q: "Hasil dari -9 - (-12) adalah ...", opts: ["-21", "-3", "3", "21"], ans: 2 },
+            { q: "Hasil dari -8 × 7 adalah ...", opts: ["-56", "56", "-15", "15"], ans: 0 },
+            { q: "Hasil dari -45 ÷ (-5) adalah ...", opts: ["-9", "9", "-8", "8"], ans: 1 },
+            { q: "Suhu es krim -4°C. Setelah dikeluarkan naik 2°C tiap 5 menit. Suhu setelah 15 menit adalah ...", opts: ["2°C", "-2°C", "6°C", "10°C"], ans: 0 },
+            { q: "Urutan dari TERKECIL: -10, 4, -2, 0, 7", opts: ["7, 4, 0, -2, -10", "-10, -2, 0, 4, 7", "0, -2, -10, 4, 7", "-2, -10, 0, 4, 7"], ans: 1 },
+            { q: "Kedalaman penyelam 25m di bawah laut ditulis ...", opts: ["+25m", "25m", "-25m", "0.25m"], ans: 2 },
+            { q: "Hasil dari (-6 + 10) × (-4) adalah ...", opts: ["-16", "16", "-64", "64"], ans: 0 },
+            { q: "Lawan (invers) dari bilangan -42 adalah ...", opts: ["-42", "42", "0", "1/42"], ans: 1 },
+            { q: "Rugi Rp 12.000 kemudian untung Rp 20.000. Posisi akhir adalah ...", opts: ["Rugi Rp 8.000", "Untung Rp 8.000", "Sisa Rp 32.000", "Rugi Rp 32.000"], ans: 1 }
+        ];
+
+        let userExamAnswers = new Array(10).fill(null);
+        let currentExamIdx = 0;
+
+        function startOfficialExam() {
+            document.getElementById('exam-start-box').classList.add('hidden');
+            document.getElementById('exam-active-box').classList.remove('hidden');
+            currentExamIdx = 0;
+            renderExamItem(currentExamIdx);
+        }
+
+        function renderExamItem(idx) {
+            const q = examList[idx];
+            const wrapper = document.getElementById('exam-question-wrapper');
+            wrapper.innerHTML = `
+                <div class="flex justify-between items-center text-xs font-bold text-slate-400 uppercase">
+                    <span>Soal Asesmen ${idx + 1} dari 10</span>
+                    <span class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full">${userExamAnswers[idx] !== null ? 'Sudah Dijawab' : 'Belum Dijawab'}</span>
+                </div>
+                <h3 class="heading-font text-lg font-bold text-slate-800">${q.q}</h3>
+                <div class="grid sm:grid-cols-2 gap-3 pt-2">
+                    ${q.opts.map((opt, i) => `
+                        <button onclick="userExamAnswers[${idx}]=${i}; renderExamItem(${idx}); SoundEngine.playClick();" class="p-4 text-left rounded-2xl border-2 ${userExamAnswers[idx] === i ? 'border-emerald-600 bg-emerald-50 font-bold text-emerald-900 shadow-md' : 'border-slate-200 hover:border-emerald-300'} text-xs transition">
+                            ${['A','B','C','D'][i]}.${opt}
+                        </button>
+                    `).join('')}
+                </div>
+            `;
+
+            const prevBtn = document.getElementById('btn-prev-exam');
+            if(idx === 0) {
+                prevBtn.classList.add('opacity-40', 'cursor-not-allowed');
+                prevBtn.disabled = true;
+            } else {
+                prevBtn.classList.remove('opacity-40', 'cursor-not-allowed');
+                prevBtn.disabled = false;
+            }
+
+            const nextBtn = document.getElementById('btn-next-exam');
+            const submitBtn = document.getElementById('btn-submit-exam');
+
+            if(idx === examList.length - 1) {
+                nextBtn.classList.add('hidden');
+                submitBtn.classList.remove('hidden');
+            } else {
+                nextBtn.classList.remove('hidden');
+                submitBtn.classList.add('hidden');
+            }
+        }
+
+        function changeExamQuestion(dir) {
+            if(currentExamIdx + dir >= 0 && currentExamIdx + dir < examList.length) {
+                currentExamIdx += dir;
+                renderExamItem(currentExamIdx);
+                SoundEngine.playClick();
+            }
+        }
+
+        function finishOfficialExam() {
+            let correctCount = 0;
+            userExamAnswers.forEach((ans, i) => {
+                if(ans === examList[i].ans) correctCount++;
+            });
+
+            const finalScore = correctCount * 10;
+            document.getElementById('exam-active-box').classList.add('hidden');
+            document.getElementById('exam-result-box').classList.remove('hidden');
+            document.getElementById('final-score-badge').innerText = finalScore;
+
+            document.getElementById('cert-display-name').innerText = studentData.name || 'Siswa SD Negeri Ploso';
+            document.getElementById('cert-display-score').innerText = finalScore;
+
+            sendResultsToGoogleSheets(studentData.name, studentData.no, finalScore);
+
+            SoundEngine.playFanfare();
+            if(finalScore >= 70) confetti({ particleCount: 100, spread: 80 });
+        }
+
+        function sendResultsToGoogleSheets(nama, noAbsen, skor) {
+            const statusNode = document.getElementById('sheet-sending-status');
+            
+            const payload = {
+                timestamp: new Date().toLocaleString("id-ID"),
+                nama: nama,
+                noAbsen: noAbsen,
+                skor: skor
+            };
+
+            fetch(GOOGLE_SHEETS_WEBHOOK_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            }).then(() => {
+                statusNode.innerHTML = `<span class="text-emerald-600 font-bold"><i class="fa-solid fa-circle-check"></i> Data Hasil Asesmen Terkirim ke Spreadsheet Guru!</span>`;
+            }).catch(err => {
+                statusNode.innerHTML = `<span class="text-rose-500 font-bold"><i class="fa-solid fa-triangle-exclamation"></i> Gagal terhubung ke Spreadsheet.</span>`;
+            });
+        }
+
+        // ================= REFLEKSI SISWA =================
+        function selectEmojiFeel(feelText, btnEl) {
+            selectedFeeling = feelText;
+            document.querySelectorAll('.emoji-btn').forEach(b => b.classList.remove('border-rose-500', 'bg-rose-50', 'ring-2', 'ring-rose-400'));
+            btnEl.classList.add('border-rose-500', 'bg-rose-50', 'ring-2', 'ring-rose-400');
+            SoundEngine.playClick();
+        }
+
+        function submitStudentReflection() {
+            if(!selectedFeeling) {
+                alert('Pilih salah satu emoji perasaanmu terlebih dahulu!');
+                return;
+            }
+            document.getElementById('reflection-status').classList.remove('hidden');
+            SoundEngine.playCorrect();
+        }
+
+        function showCertificateModal() {
+            document.getElementById('certificate-printable-modal').classList.remove('hidden');
+        }
+
+        function closeCertificateModal() {
+            document.getElementById('certificate-printable-modal').classList.add('hidden');
+        }
+
+        window.onload = function() {
+            initNumberLine();
+            renderQuizLevel();
+        };
+    </script>
+</body>
+</html>
